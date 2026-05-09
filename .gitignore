@@ -1,0 +1,34 @@
+# Environment variables — NEVER commit this
+.env
+
+# SQLite database — your personal data
+braindump.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# ngrok
+ngrok
