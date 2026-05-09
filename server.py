@@ -5,6 +5,9 @@ from flask import Flask, request, Response, jsonify
 from twilio.twiml.voice_response import VoiceResponse, Connect
 from twilio.rest import Client
 from dotenv import load_dotenv
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
@@ -32,6 +35,37 @@ Rules:
 
 # ─── Database Setup ───────────────────────────────────────────────────────────
 DB_PATH = "braindump.db"
+
+
+
+def send_email(summary):
+
+    try:
+        msg = MIMEMultipart()
+        msg["From"]    = os.getenv("EMAIL_FROM")
+        msg["To"]      = os.getenv("EMAIL_TO")
+        msg["Subject"] = "🧠 Brain Dump Summary"
+        print(f"📧 Preparing email to {os.getenv('EMAIL_TO')}")
+        body = f"""
+            📝 SUMMARY
+            {summary}
+
+            ─────────────────────
+            """
+
+        msg.attach(MIMEText(body, "plain"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(
+                os.getenv("EMAIL_FROM"),
+                os.getenv("EMAIL_APP_PASSWORD")
+            )
+            server.send_message(msg)
+
+        print(f"📧 Email sent to {os.getenv('EMAIL_TO')}")
+
+    except Exception as e:
+        print(f"❌ Failed to send email: {e}")
 
 def init_db():
     """Create tables if they don't exist."""
@@ -135,17 +169,15 @@ def call_ended():
     summary = call_data.get("summary")
     transcript = call_data.get("transcript")  # May not be present in webhook
     if summary:
-        short_summary = summary[:120] + "..." if len(summary) > 120 else summary
-
-        sms_body = f"🧠 {short_summary}"
         
         try:
-            twilio_client.messages.create(
-                body=sms_body,
-                from_=os.getenv("TWILIO_PHONE_NUMBER"),
-                to=os.getenv("YOUR_PHONE_NUMBER")
-            )
-            print(f"📱 SMS sent to {os.getenv('YOUR_PHONE_NUMBER')}")
+            # twilio_client.messages.create(
+            #     body=sms_body,
+            #     from_=os.getenv("TWILIO_PHONE_NUMBER"),
+            #     to=os.getenv("YOUR_PHONE_NUMBER")
+            # )
+            send_email(summary)
+            print(f"� Email sent to {os.getenv('EMAIL_TO')}")
 
         except Exception as e:
             print(f"❌ Failed to send SMS: {e}")
